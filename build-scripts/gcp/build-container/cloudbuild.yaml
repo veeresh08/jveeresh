@@ -3,3 +3,5 @@ steps:
     args: ['build', '-t', '${_BUILD_IMAGE_REPO_PATH}/${_BUILD_IMAGE_NAME}:${_BUILD_IMAGE_TAG}', '.']
 images:
   - '${_BUILD_IMAGE_REPO_PATH}/${_BUILD_IMAGE_NAME}:${_BUILD_IMAGE_TAG}'
+options:
+  logging: CLOUD_LOGGING_ONLY

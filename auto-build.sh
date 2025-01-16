@@ -34,10 +34,11 @@ get_github_code() {
         echo "No patch file provided."
         echo "v1.14.0-rc01" > version.txt
     fi
-    build
+    build "${TEMP_DIR}"
 }
 
 build() {
+    CLONED_DIR=$1  # Temporary directory where the repository is cloned
     SRV_ACNT="projects/${PROJ_NAME}/serviceAccounts/run-function-sa@${PROJ_NAME}.iam.gserviceaccount.com"
     IMG_REPO="${REGION}-docker.pkg.dev/${PROJ_NAME}"
     REL=$(cat version.txt)
@@ -46,10 +47,11 @@ build() {
 _BUILD_IMAGE_NAME=bazel-build-container,\
 _BUILD_IMAGE_TAG=${REL}"
 
+    # Ensure the correct path to the cloudbuild.yaml file
     gcloud builds submit --region="${REGION}" \
         --service-account="${SRV_ACNT}" \
         --suppress-logs \
-        --config=build-scripts/gcp/build-container/cloudbuild.yaml \
+        --config="${CLONED_DIR}/build-scripts/gcp/build-container/cloudbuild.yaml" \
         --substitutions="${SUBS}" >/dev/null
 
     SUBS="_BUILD_IMAGE_REPO_PATH=${IMG_REPO}/gps-bazel-image,\
@@ -65,7 +67,7 @@ _TAR_PUBLISH_BUCKET_PATH=coordinator-archive"
         --region="${REGION}" \
         --service-account="${SRV_ACNT}" \
         --suppress-logs --async \
-        --config=build-scripts/gcp/cloudbuild.yaml \
+        --config="${CLONED_DIR}/build-scripts/gcp/build-container/cloudbuild.yaml" \
         --substitutions="${SUBS}" >/dev/null
 }
 
