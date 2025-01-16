@@ -21,7 +21,7 @@ get_github_code() {
     fi
 
     if [[ ! -z ${PATCH_FILE} ]] ; then
-        BUCKET="gps-coordinator-artifacts"
+        BUCKET="gps-coordinator-artifacts-test"
         FOLDER="prerel-patch"
         gsutil cp "gs://${BUCKET}/${FOLDER}/${PATCH_FILE}" .
         VERSION=$(basename "${PATCH_FILE}" .patch)
@@ -55,7 +55,7 @@ _BUILD_IMAGE_TAG=${REL},\
 _OUTPUT_IMAGE_REPO_PATH=${IMG_REPO}/gps-keygen,\
 _OUTPUT_KEYGEN_IMAGE_NAME=keygen_mp_gcp_prod,\
 _OUTPUT_IMAGE_TAG=${REL},\
-_TAR_PUBLISH_BUCKET=gps-coordinator-artifacts,\
+_TAR_PUBLISH_BUCKET=gps-coordinator-artifacts-test,\
 _TAR_PUBLISH_BUCKET_PATH=coordinator-archive"
 
     gcloud builds submit \
