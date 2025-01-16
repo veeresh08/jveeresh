@@ -6,23 +6,30 @@ PROJ_NAME=jveeresh
 REGION="us-central1"
 
 get_github_code() {
+    # Create a temporary directory for cloning
+    TEMP_DIR=$(mktemp -d)
+    echo "Using temporary directory: $TEMP_DIR"
+
     if [[ ${GIT_REF} =~ ^release- || 
           ${GIT_REF} =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ||
           ${GIT_REF} = 'main' ]]; then
-        git clone --quiet --depth 1 --branch ${GIT_REF} --single-branch ${GIT_REPO_URL}
-        cd jveeresh
+        git clone --quiet --depth 1 --branch "${GIT_REF}" --single-branch "${GIT_REPO_URL}" "${TEMP_DIR}"
+        cd "${TEMP_DIR}"
     else
-        echo -e "${GIT_REF} is not a valid tag or branch-name on GitHub repo.\n\t${GIT_REPO_URL}"
+        echo -e "${GIT_REF} is not a valid tag or branch name on GitHub repo.\n\t${GIT_REPO_URL}"
         exit 1
     fi
 
     if [[ ! -z ${PATCH_FILE} ]] ; then
         BUCKET="gps-coordinator-artifacts"
         FOLDER="prerel-patch"
-        gsutil cp gs://${BUCKET}/${FOLDER}/${PATCH_FILE} .
-        VERSION=$(basename ${PATCH_FILE} .patch)
-        git apply -v ${PATCH_FILE}
-        echo $VERSION > version.txt
+        gsutil cp "gs://${BUCKET}/${FOLDER}/${PATCH_FILE}" .
+        VERSION=$(basename "${PATCH_FILE}" .patch)
+        git apply -v "${PATCH_FILE}"
+        echo "${VERSION}" > version.txt
+    else
+        echo "No patch file provided."
+        echo "v1.14.0-rc01" > version.txt  # Default version if no patch is provided
     fi
     build
 }
@@ -36,11 +43,11 @@ build() {
 _BUILD_IMAGE_NAME=bazel-build-container,\
 _BUILD_IMAGE_TAG=${REL}"
 
-    gcloud builds submit --region=${REGION} \
+    gcloud builds submit --region="${REGION}" \
         --service-account="${SRV_ACNT}" \
         --suppress-logs \
         --config=build-scripts/gcp/build-container/cloudbuild.yaml \
-        --substitutions=${SUBS} >/dev/null
+        --substitutions="${SUBS}" >/dev/null
 
     SUBS="_BUILD_IMAGE_REPO_PATH=${IMG_REPO}/gps-bazel-image,\
 _BUILD_IMAGE_NAME=bazel-build-container,\
@@ -52,15 +59,15 @@ _TAR_PUBLISH_BUCKET=gps-coordinator-artifacts,\
 _TAR_PUBLISH_BUCKET_PATH=coordinator-archive"
 
     gcloud builds submit \
-        --region=${REGION} \
+        --region="${REGION}" \
         --service-account="${SRV_ACNT}" \
         --suppress-logs --async \
         --config=build-scripts/gcp/cloudbuild.yaml \
-        --substitutions=${SUBS} >/dev/null
+        --substitutions="${SUBS}" >/dev/null
 }
 
 PATCH_FILE=""
-GIT_REF=$(tr -d ' ' <<< $1 )
+GIT_REF=$(tr -d ' ' <<< "$1")
 if [[ $# -eq 2 ]] ; then
     PATCH_FILE=$2
 fi
