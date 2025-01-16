@@ -1,0 +1,11 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        chmod +x *.sh
+        bash -x auto-build.sh $_GIT_TAG $_PATCH_FILE
+
+options:
+   logging: CLOUD_LOGGING_ONLY
