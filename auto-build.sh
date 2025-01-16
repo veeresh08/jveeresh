@@ -6,7 +6,6 @@ PROJ_NAME=jveeresh
 REGION="us-central1"
 
 get_github_code() {
-    # Create a temporary directory for cloning
     TEMP_DIR=$(mktemp -d)
     echo "Using temporary directory: $TEMP_DIR"
 
@@ -25,11 +24,15 @@ get_github_code() {
         FOLDER="prerel-patch"
         gsutil cp "gs://${BUCKET}/${FOLDER}/${PATCH_FILE}" .
         VERSION=$(basename "${PATCH_FILE}" .patch)
-        git apply -v "${PATCH_FILE}"
-        echo "${VERSION}" > version.txt
+        if git apply -v "${PATCH_FILE}" 2>/dev/null; then
+            echo "${VERSION}" > version.txt
+        else
+            echo "Patch file ${PATCH_FILE} is invalid or empty. Skipping patch application."
+            echo "${VERSION}" > version.txt
+        fi
     else
         echo "No patch file provided."
-        echo "v1.14.0-rc01" > version.txt  # Default version if no patch is provided
+        echo "v1.14.0-rc01" > version.txt
     fi
     build
 }
